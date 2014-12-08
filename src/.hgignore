@@ -1,0 +1,14 @@
+syntax: glob
+*ReSharper*
+*/pkg/*
+*/pkgobj/*
+*/bin/*
+*/obj/*
+*.suo
+*.DotSettings
+*/packages/*
+*.user
+packages/*
+*.dbmdl
+*.orig
+*.bak

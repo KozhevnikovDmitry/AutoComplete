@@ -1,0 +1,1 @@
+﻿call AutoComplete.exe "test.in"
