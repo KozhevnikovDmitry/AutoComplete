@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace AutoComplete
@@ -11,10 +10,10 @@ namespace AutoComplete
             try
             {
                 // parse input lines
-                var parsedInput = InputParser.Parse();
-
-                // print first 10 completes for prefix 
-                AutoComplete.Complete(parsedInput.Item1, parsedInput.Item2, 10);
+                var parsedInput = InputParser.Parse(Console.In);
+                
+                // generate completions
+                AutoComplete.Complete(parsedInput.Item1, parsedInput.Item2, 10, Console.Out);
             }
             catch (Exception ex)
             {

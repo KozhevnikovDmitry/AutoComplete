@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AutoComplete
 {
@@ -15,18 +11,19 @@ namespace AutoComplete
     public static class AutoComplete
     {
         /// <summary>
-        /// Returns list of complete sets for prefixes by vocabulary.
+        /// Writes completions for prefixes with provided writer.
         /// </summary>
         /// <param name="vocabulary">Vocabulary with words of completion</param>
         /// <param name="prefixes">Prefixes to complete</param>
         /// <param name="completeAmount">Amount of the completion set</param>
+        /// <param name="writer">Writer for completion results</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <remarks>
         /// Prints completion sets to console.
         /// Completes prefixes in certain order.
         /// </remarks>
-        public static List<string> Complete(string[] vocabulary, string[] prefixes, int completeAmount)
+        public static void Complete(string[] vocabulary, string[] prefixes, int completeAmount, TextWriter writer)
         {
             if (vocabulary == null)
                 throw new ArgumentNullException("vocabulary");
@@ -37,28 +34,33 @@ namespace AutoComplete
             if (completeAmount < 0)
                 throw new ArgumentOutOfRangeException("completeAmount");
 
-
+            // build index for vocaulary
             var index = BuildIndex(vocabulary, completeAmount);
             
-            // results accumulator
-            var results = new List<string>();
+            // write completion
+            WriteCompletions(index, prefixes, writer);
+        }
 
+        /// <summary>
+        /// Writes completions for prefixes with provided writer.
+        /// </summary>
+        /// <param name="index">Vocabulary index</param>
+        /// <param name="prefixes">Prefixes to complete</param>
+        /// <param name="writer">Writer for completion results</param>
+        /// <remarks>
+        /// Prints completion sets to console.
+        /// Completes prefixes in certain order.
+        /// </remarks>
+        internal static void WriteCompletions(Dictionary<string, string> index, string[] prefixes, TextWriter writer)
+        {
             // for every prefix in certain order
             foreach (var prefix in prefixes)
             {
-                // if prefix is presented in index
                 if (index.ContainsKey(prefix))
                 {
-                    // take complete from index
-                    var complete = index[prefix];
-                    results.Add(complete);
-
-                    // the slowest operation. Without it all flies.
-                    Console.WriteLine(complete);
+                    writer.WriteLine(index[prefix]);
                 }
             }
-
-            return results;
         }
 
         /// <summary>
@@ -70,7 +72,7 @@ namespace AutoComplete
         /// Method builds some kind of string index for vocabulary. 
         /// That index has word as a key, and words completion(as single string) set as a value.
         /// </remarks>
-        private static Dictionary<string, string> BuildIndex(string[] vocabulary, int completeAmount)
+        internal static Dictionary<string, string> BuildIndex(string[] vocabulary, int completeAmount)
         {
             // index accumulator
             var vocabularyIndex = new List<KeyValuePair<string, string>>();
@@ -90,5 +92,6 @@ namespace AutoComplete
 
             return vocabularyIndex.ToDictionary(t => t.Key, t => t.Value);
         }
+       
     }
 }

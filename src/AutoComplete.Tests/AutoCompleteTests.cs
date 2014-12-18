@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.IO;
 using NUnit.Framework;
 
 namespace AutoComplete.Tests
@@ -11,21 +11,21 @@ namespace AutoComplete.Tests
         public void Complete_VocabularyIsNull_Fails_Test()
         {
             // Assert
-            Assert.Throws<ArgumentNullException>(() => AutoComplete.Complete(null, new string[0], 0));
+            Assert.Throws<ArgumentNullException>(() => AutoComplete.Complete(null, new string[0], 0, new StringWriter()));
         }
 
         [Test]
         public void Complete_PrefixesIsNull_Fails_Test()
         {
             // Assert
-            Assert.Throws<ArgumentNullException>(() => AutoComplete.Complete(new string[0], null, 0));
+            Assert.Throws<ArgumentNullException>(() => AutoComplete.Complete(new string[0], null, 0, new StringWriter()));
         }
-        
+
         [Test]
         public void Complete_CompleteAmountIsNegative_Fails_Test()
         {
             // Assert
-            Assert.Throws<ArgumentOutOfRangeException>(() => AutoComplete.Complete(new string[0], new string[0], -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => AutoComplete.Complete(new string[0], new string[0], -1, new StringWriter()));
         }
 
         [Test]
@@ -34,12 +34,13 @@ namespace AutoComplete.Tests
             // Arrange
             var words = new[] { "AAA", "AA", "A" };
             var prefixes = new[] { "A" };
+            var completes = new StringWriter();
 
             // Act
-            var completes = AutoComplete.Complete(words, prefixes, 3);
+            AutoComplete.Complete(words, prefixes, 3, completes);
 
             // Assert
-            Assert.AreEqual(completes[0], "AAA\r\nAA\r\nA\r\n");
+            Assert.AreEqual(completes.ToString(), "AAA\r\nAA\r\nA\r\n\r\n");
         }
 
         [Test]
@@ -48,12 +49,13 @@ namespace AutoComplete.Tests
             // Arrange
             var words = new[] { "A", "AA", "B" };
             var prefixes = new[] { "B" };
+            var completes = new StringWriter();
 
             // Act
-            var completes = AutoComplete.Complete(words, prefixes, 2);
+            AutoComplete.Complete(words, prefixes, 2, completes);
 
             // Assert
-            Assert.AreEqual(completes[0], "B\r\n");
+            Assert.AreEqual(completes.ToString(), "B\r\n\r\n");
         }
 
         [Test]
@@ -62,13 +64,13 @@ namespace AutoComplete.Tests
             // Arrange
             var words = new[] { "A", "AA", "B", "BB" };
             var prefixes = new[] { "B", "A" };
+            var completes = new StringWriter();
 
             // Act
-            var completes = AutoComplete.Complete(words, prefixes, 2);
+            AutoComplete.Complete(words, prefixes, 2, completes);
 
             // Assert
-            Assert.AreEqual(completes.First(), "B\r\nBB\r\n");
-            Assert.AreEqual(completes.Last(), "A\r\nAA\r\n");
+            Assert.AreEqual(completes.ToString(), "B\r\nBB\r\n" + "\r\n" + "A\r\nAA\r\n\r\n");
         }
 
         [Test]
@@ -77,40 +79,43 @@ namespace AutoComplete.Tests
             // Arrange
             var words = new[] { "A", "AA", "AAA" };
             var prefixes = new[] { "AAAA" };
+            var completes = new StringWriter();
 
             // Act
-            var completes = AutoComplete.Complete(words, prefixes, 2);
+            AutoComplete.Complete(words, prefixes, 2, completes);
 
             // Assert
-            Assert.IsEmpty(completes);
+            Assert.IsEmpty(completes.ToString());
         }
-        
+
         [Test]
         public void Complete_DoNotCompletePrefixesMissingInVocabulary_Test()
         {
             // Arrange
             var words = new[] { "A", "AA", "AAA" };
             var prefixes = new[] { "ZZZ" };
+            var completes = new StringWriter();
 
             // Act
-            var completes = AutoComplete.Complete(words, prefixes, 2);
+            AutoComplete.Complete(words, prefixes, 2, completes);
 
             // Assert
-            Assert.IsEmpty(completes);
+            Assert.IsEmpty(completes.ToString());
         }
 
         [Test]
         public void Complete_TakeOnlyCompleteCount_Test()
         {
             // Arrange
-            var words = new[] {"A", "AA", "AAA"};
-            var prefixes = new[] {"A"};
+            var words = new[] { "A", "AA", "AAA" };
+            var prefixes = new[] { "A" };
+            var completes = new StringWriter();
 
             // Act
-            var completes = AutoComplete.Complete(words, prefixes, 2);
+            AutoComplete.Complete(words, prefixes, 2, completes);
 
             // Assert
-            Assert.AreEqual(completes[0], "A\r\nAA\r\n");
+            Assert.AreEqual(completes.ToString(), "A\r\nAA\r\n\r\n");
         }
 
         [Test]
@@ -119,30 +124,28 @@ namespace AutoComplete.Tests
             // Arrange
             var words = new[] { "A", "AA", "AAA" };
             var prefixes = new[] { "A" };
+            var completes = new StringWriter();
 
             // Act
-            var completes = AutoComplete.Complete(words, prefixes, 4);
+            AutoComplete.Complete(words, prefixes, 4, completes);
 
             // Assert
-            Assert.AreEqual(completes[0], "A\r\nAA\r\nAAA\r\n");
+            Assert.AreEqual(completes.ToString(), "A\r\nAA\r\nAAA\r\n\r\n");
         }
 
         [Test]
         public void Complete_CompleteRepeatPrefixexAsWell_Test()
         {
             // Arrange
-            var words = new[] { "A", "AA", "B", "BB"};
+            var words = new[] { "A", "AA", "B", "BB" };
             var prefixes = new[] { "A", "B", "A", "B" };
+            var completes = new StringWriter();
 
             // Act
-            var completes = AutoComplete.Complete(words, prefixes, 2);
+            AutoComplete.Complete(words, prefixes, 2, completes);
 
             // Assert
-            Assert.AreEqual(completes.Count, 4);
-            Assert.AreEqual(completes[0], "A\r\nAA\r\n");
-            Assert.AreEqual(completes[1], "B\r\nBB\r\n");
-            Assert.AreEqual(completes[2], "A\r\nAA\r\n");
-            Assert.AreEqual(completes[3], "B\r\nBB\r\n");
+            Assert.AreEqual(completes.ToString(), "A\r\nAA\r\n" + "\r\n" + "B\r\nBB\r\n" + "\r\n" + "A\r\nAA\r\n" + "\r\n" + "B\r\nBB\r\n" + "\r\n");
         }
     }
 }
